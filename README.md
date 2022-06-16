@@ -16,7 +16,11 @@ Several methods of sensitivity analysis for linear models have been proposed in 
 
 ## Installation
 
-To install `regsensitivity`, copy all files in the `regsensitivityStataPackage` subdirectory to your `Stata/ado/personal` directory. For explanation of the syntax:
+To install `regsensitivity` from within Stata:
+```
+. ssc install regsensitivity
+```
+It can also be installed manually by copying all files in the `regsensitivityStataPackage` subdirectory to your `Stata/ado/personal` directory. For explanation of the syntax:
 ```
 . help regsensitivity
 ```
