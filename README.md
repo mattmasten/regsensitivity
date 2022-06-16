@@ -4,7 +4,8 @@
 
 Several methods of sensitivity analysis for linear models have been proposed in the literature. This repository contains a Stata module that implements the methods proposed in Diegert, Masten, and Poirier (2022). In the paper, the authors define a set of sensitivity parameters which index relaxations of the assumption that the covariate of interest is uncorrelated with any unobserved variables. The parameter of interest in both cases is $\beta$, the coefficient on that covariate of interest in the infeasible regression that includes the unobserved variables. Using this framework, we can ask two questions:
 
-1. What is the set of parameter estimates for $\beta$ which are consistent with the relaxed assumptions? That is, what are bounds on the value of $\beta$ under the alternate assumptions?
+1. What is the set of parameter estimates for $\beta$ which are consistent with the relaxed assumptions? 
+That is, what are bounds on the value of $\beta$ under the alternate assumptions?
 
 2. How much can we relax the exogeneity assumption before a hypothesis about $\beta$ is overturned? This is called the _breakdown point_: the maximum relaxation of the baseline assumption before the hypothesis is overturned.
 
@@ -18,11 +19,11 @@ Several methods of sensitivity analysis for linear models have been proposed in 
 
 To install `regsensitivity` from within Stata:
 ```
-. ssc install regsensitivity
+ssc install regsensitivity
 ```
 It can also be installed manually by copying all files in the `regsensitivityStataPackage` subdirectory to your `Stata/ado/personal` directory. For explanation of the syntax:
 ```
-. help regsensitivity
+help regsensitivity
 ```
 
 ## Subdirectories
