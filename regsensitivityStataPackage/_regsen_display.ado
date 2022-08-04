@@ -1,4 +1,13 @@
-*! version 1.0.0  6jun2022
+*! version 1.1.0  1aug2022
+
+// global default display settings
+// global left_colon = 18 // placement of colon in left column of header
+// global right_col  = 48 // start of right column
+// global equal_col  = 63 // placement of = in right column
+// global right_bord = 80 // total width of table
+//
+// global labels_width 35 // width of left column with c-dependence values		
+// global n_dig 3         // number of decimal points for c-dependence values
 
 // PROGRAM: Display Regsensitivity results
 // DESCRIPTION: Main program to display regsensitivity estimation results
@@ -38,6 +47,8 @@ program display_idset_table
 
 	// process input
 	syntax anything, [labels_width(integer 35) right_bord(integer 80) shortheader]
+	
+	tempname breakdown
 	
 	// =====================================================================
 	// 1. details for table header
@@ -87,7 +98,15 @@ program display_idset_table
 	}
 	
 	// breakdown point as percentage
-	local breakdown e(breakdown)
+	if e(breakdown) < .{
+		scalar `breakdown' = abs(e(breakdown))
+		local right_vals `"right_vals(e(N) `vs' . `breakdown')"'
+		local right_types `"right_types(int `ts' str percent)"'
+	}
+	else {
+		local right_vals `"right_vals(e(N) `vs' . +inf)"'
+		local right_types `"right_types(int `ts' str str)"'
+	}
 	
 	// =====================================================================
 	// 2.2 Write table 
@@ -103,8 +122,8 @@ program display_idset_table
 			*/ . . . . . `"`hypothesis'"' `"`e(other_sensparams)'"') ///
 			right_labels("Number of obs" `ls' "" `e(sensparam1)' /*
 			*/ "Breakdown point") ///
-			right_vals(e(N) `vs' . e(breakdown)) ///
-			right_types(int `ts' str percent)
+			`right_vals' ///
+			`right_types'
 			di
 	}
 	
@@ -133,6 +152,18 @@ program display_breakdown_table
 	tempname breakfront sum_stats
 		
 	matrix `breakfront' = e(breakfront_table)
+	
+	// report the absolute values of the breakdown frontier
+	// IMPLEMENTATION NOTE: looping stata rather than vectorized mata
+	// because that drops the labels and because it overwrites .b, which
+	// is the code we are using for +inf
+	local nbreakfront : rowsof(`breakfront')
+	forvalues i=1/`nbreakfront'{
+		if `breakfront'[`i', 2] < .{
+			matrix `breakfront'[`i', 2] = abs(`breakfront'[`i', 2]) 
+		}
+	}
+	
 
 	// =====================================================================
 	// 1. details for table header
@@ -178,7 +209,7 @@ program display_breakdown_table
 	
 	if "`shortheader'" == ""{
 		_regsen_write_table_header, title(Regression Sensitivity Analysis, Breakdown Frontier) ///
-			left_labels(Analysis "" Treatment Outome "" "" "" Hypothesis `otherparams' ) ///
+			left_labels(Analysis "" Treatment Outcome "" "" "" Hypothesis `otherparams' ) ///
 			left_vals("`e(analysis)'" . `e(indvar)' `e(depvar)' . . . `"`hypothesis'"' `"`e(other_sparams)'"') ///
 			right_labels("Number of obs" `ls' "") ///
 			right_vals(`e(N)' `vs') ///
@@ -186,7 +217,7 @@ program display_breakdown_table
 	}
 	else {
 		_regsen_write_table_header, title(Regression Sensitivity Analysis, Breakdown Frontier) ///
-			left_labels(Analysis Treatment Outome Hypothesis `otherparams' ) ///
+			left_labels(Analysis Treatment Outcome Hypothesis `otherparams' ) ///
 			left_vals("`e(analysis)'" `e(indvar)' `e(depvar)' `"`hypothesis'"' `"`e(other_sparams)'"')
 		 di 
 	}

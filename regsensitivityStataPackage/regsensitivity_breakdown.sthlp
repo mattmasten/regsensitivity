@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  26may2022}{...}
+{* *! version 1.1.0  1aug2022}{...}
 {vieweralsosee "regensitivity" "regsensitivity"}{...}
 {viewerjumpto "Syntax" "regsensitivity_breakdown##syntax"}{...}
 {viewerjumpto "Description" "regsensitivity_breakdown##description"}{...}
@@ -20,7 +20,8 @@
 {it:{help varname:depvar}} {it:{help varname:indepvar}}
 {it:{help varlist:controls}}
 {ifin}
-[,{it:{help regsensitivity_breakdown##options:options}}]
+[,{it:{help regsensitivity_breakdown##analysis:analysis}} 
+{it:{help regsensitivity_breakdown##options:options}}]
 
 {phang}
 {it:depvar} is the dependent variable.
@@ -33,6 +34,16 @@
 factor and time series variables.
 
 {synoptset 20 tabbed}{...}
+{marker analysis}{...}
+{synopthdr:analysis}
+{synoptline}
+{synopt:{opt dmp}}Diegert, Masten, and Poirier (2022); the default{p_end}
+{synopt:{opt oster}}Oster (2019) and Masten and Poirier (2022){p_end}
+{synoptline}
+{p 4 6 2}
+{it:analysis} specifies the sensitivity analysis to be performed. 
+
+{synoptset 20 tabbed}{...}
 {marker options}{...}
 {synopthdr:options}
 {synoptline}
@@ -42,9 +53,11 @@ deviations from identifying assumptions, default all controls{p_end}
 {synopt:{opt nocompare}({help varlist:varlist})}Include all controls in comparison controls except these{p_end}
 
 {syntab: Sensitivity parameters (dmp)}
-{synopt:{opt c:bar}({help numlist:numlist})}Maximum correlation
-between the controls and the unobserved variable; default 1{p_end}
+{synopt:{opt c:bar}({help regsensitivity_breakdown##param_spec:param_spec})}Maximum correlation
+between the comparison controls and the omitted variable; default 1{p_end}
 
+{syntab: Sensitivity parameters (oster)}
+{synopt:{opt r2long}({help regsensitivity_breakdown##param_spec:param_spec})}R-squared of a regression of {it:depvar} on {it:indepvar}, the comparison controls, and the omitted variable; default 1{p_end}
 {syntab: Breakdown Hypothesis}
 {synopt:{opt beta}({help regsensitivity_breakdown##hypothesis:hypothesis})}Calculate breakdown point relative to this hypothesis; default {help regsensitivity_breakdown##hypothesis:sign}{p_end}
 
@@ -58,24 +71,32 @@ between the controls and the unobserved variable; default 1{p_end}
 {pstd}
 {cmd:regsensitivity breakdown} calculates one or more breakdown points for a given
 hypothesis or hypotheses about the parameter {it:beta}. {it:Beta} is the coefficient
-on {it:indvar} in the infeasible long regression of {it:depvar} on {it:indvar}, {it:controls}, 
+on {it:indepvar} in the infeasible long regression of {it:depvar} on {it:indepvar}, {it:controls}, 
 and the omitted variable. Although the omitted variable is not observed, using a set of assumptions indexed by
 one or more sensitivity parameters, we can bound the impact of this omitted variable. This gives us a set of
 feasible values for {it:beta}, called the identified set. A breakdown point is the smallest value of the sensitivity parameter such that the hypothesis about {it:beta} no longer holds for all values in the identified 
 set for {it:beta}.
 
 {pstd}
-In the sensitivity analysis, there are three sensitivity parameters, 
+When {cmd:dmp} is selected, the sensitivity analysis in Diegert, Masten, and Poirier 
+(2022) is implemented. In that analysis, there are three sensitivity parameters, 
 {it:rxbar}, {it:rybar}, and {it:cbar}. The breakdown point is calculated for 
 {it:rxbar}, holding the values of {it:rybar} and {it:cbar} 
 fixed. The value of {it:cbar} are given in {cmd:cbar} option, while {it:rybar} is 
 fixed at +inf. 
 
 {pstd}
+When {cmd:oster} is selected, the analysis in Oster (2019) is implemented, along with the Masten and Poirier (2022) extensions. In 
+that analysis, there are two sensitivity parameters, {it:delta}, and {it:R-squared(long)}.
+The breakdown point is calculated for {it:delta}, holding 
+the values of {it:R-squared(long)} fixed. The value of {it:R-squared} is given in 
+{cmd:r2long} option.
+
+{pstd}
 The hypothesis to be tested is specified in the {cmd:beta}  option. 
-When multiple hypothesis are specified in the {cmd:beta} option, the breakdown point 
+When multiple hypotheses are specified in the {cmd:beta} option, the breakdown point 
 is calculated for each hypothesis. When multiple hypotheses are
-specified, only one value {it:cbar} can be specified.
+specified, only one value {it:cbar} or {it:R-squared(long)} can be specified.
 
 {pstd}
 Results of the analysis are displayed in a table and saved in {cmd:e()}. To see
@@ -85,10 +106,23 @@ see {help regsensitivity_breakdown##remarks:Remarks}.
 {marker options}{...}
 {title:Options}
 
+{dlgtab:Analysis}
+
+{phang}
+{it: analysis} is one of two sensitivity analyses proposed in the literature. Only one 
+statistic can be specified. 
+
+{pmore}
+{cmd:dmp} selects the sensitivity analysis proposed in Diegert, Masten, and Poirier (2022)
+
+{pmore}
+{cmd:oster} selects the sensitivity analysis proposed in Oster (2019) and extended in Masten and Poirier (2022)
+
 {dlgtab: Calibration}
 
 {p 4 4 2}
-The sensitivity parameters used in the analysis are defined relative to
+The sensitivity parameters used in the analyses in
+Diegert, Masten, and Poirier (2022), Oster (2019), and Masten and Poirier (2022) are defined relative to
 a set of observed variables. These options are used to select the variables
 included in the comparison controls. 
 
@@ -103,18 +137,72 @@ from the comparison controls{p_end}
 {dlgtab:Sensitivity Parameters}
 
 {p 4 4 2}
-Sensitivity parameters used to relax the no omitted variable bias
-assumption. The options
-have been named to follow the notation in {browse "https://arxiv.org/abs/2206.02303":Diegert, Masten, and Poirier (2022)}. For more 
-details on the definition of each sensitivity parameter, see the references 
-listed {help regsensitivity##further_information:here}.
+The sensitivity parameters used to relax the no omitted variable bias
+assumption as proposed in the paper referenced for each analysis. The options
+have been named to follow the notation in each corresponding paper. For more 
+details on the definition of each sensitivity parameter, see the referenced paper. 
+
+{p 4 4 2}
+Diegert, Masten, and Poirier (2022)
 
 {pmore}
-{cmd:cbar}({help numlist:numlist}) The maximum correlation between the comparison controls and an unobserved variable.
+{cmd:cbar}({help regsensitivity_breakdown##param_spec:param_spec}) The maximum correlation between the comparison controls and an unobserved variable.
+
+{p 4 4 2}
+Oster (2019)
+
+{pmore}
+{cmd:r2long}({help regsensitivity_breakdown##param_spec:param_spec}) The R-squared in the infeasible long regression of {it:depvar}
+on {it:indepvar}, {it:controls}, and the unobserved variable.
+
+{pmore}
+{cmd:maxovb}({help regsensitivity_bounds##param_spec:param_spec}) Maximum absolute value of the omitted variable bias, defined in Masten and Poirier (2022).
+
+{marker param_spec}{...}
+{p 4 4 2}
+The {it:param_spec} option has the following format:
+
+{pmore}
+{help numlist:numlist} [,eq bound relative]
 
 {p 4 4 2}
 The {help numlist:numlist} specifies the values of the 
-sensitivity parameters to use in the analysis. When exactly two values are given, these are interpreted as a range and are expanded to a uniform grid with {it:npoints} over this range. Otherwise, the {help numlist:numlist} is expanded normally. 
+sensitivity parameters to use in the analysis.
+
+{p 4 4 2}
+When the {it:eq} option is selected ({it:"equal"}), the identified set is calculated 
+under the assumption that the sensitivity parameter is equal to the values provided.
+
+{p 4 4 2}
+When the {it:bound} option is selected, the identified set is calculated 
+under the assumption that the norm of the sensitivity parameter is bounded by the values provided.
+
+{p 4 4 2}
+When the {it:relative} option is selected, the input is interpreted relative to a reference
+value. For {cmd:r2long}, the reference value is R-squared(medium). For {cmd:maxovb}, the
+reference value is the absolute value of Beta(medium). For {cmd:r2long}, for example,
+{cmd:r2long(1.3, relative)} is converted to 1.3*R-squared(medium).  
+
+{p 4 4 2}
+The following table describes the defaults and availability of the options for
+each analysis:
+
+{col 25}{c |}{center 20:equal}{col 45}{center 20:bound}{col 65}{center 20:relative}
+{col 5}{hline 20}{c +}{hline 60}
+{col 5}{it:DMP (2022)}{col 25}{c |}
+{col 25}{c |}
+{col 7}{cmd:rxbar}{col 25}{c |}{center 20:Not Implemented}{col 45}{center 20:Default}{col 65}{center 20:Not Implemented}
+{col 25}{c |}
+{col 7}{cmd:cbar}{col 25}{c |}{center 20:Not Implemented}{col 45}{center 20:Default}{col 65}{center 20:Not Implemented}
+{col 25}{c |}
+{col 5}{hline 20}{c +}{hline 60}
+{col 5}{it:Oster (2019)}{col 25}{c |}
+{col 25}{c |}
+{col 7}{cmd:delta}{col 25}{c |}{center 20:Default}{col 45}{center 20:Implemented}{col 65}{center 20:Not Implemented}
+{col 25}{c |}
+{col 7}{cmd:r2long}{col 25}{c |}{center 20:Default}{col 45}{center 20:Not Implemented}{col 65}{center 20:Implemented}
+{col 25}{c |}
+{col 7}{cmd:maxovb}{col 25}{c |}{center 20:Not Implemented}{col 45}{center 20:Default}{col 65}{center 20:Implemented}
 
 {dlgtab:Breakdown Hypothesis}
 
@@ -124,49 +212,50 @@ will be calculated.
 
 {pmore}
 {opt beta}({help regsensitivity_breakdown##hypothesis:hypothesis}) The coefficient 
-on {it:indvar} in a theoretical regression of {it:depvar} on 
-{it:indvar}, {it:controls}, and an omitted variable.
+on {it:indepvar} in a theoretical regression of {it:depvar} on 
+{it:indepvar}, {it:controls}, and an omitted variable.
 
 {marker hypothesis}{...}
 {p 4 4 2}
 The {it:hypothesis} option has the following format:
 
 {pmore}
-{help numlist:numlist} [,lb ub]
-{it:or}
+{help numlist:numlist} [,lb ub eq]
+
+{p 4 4 2}
+or
+
+{pmore}
 sign
 
 {p 4 4 2}
-Hypothesese are of the format {it:beta} > {it:b} or {it:beta} < {it:b}.
+Hypothesese are of the format {it:beta} > {it:b}, {it:beta} < {it:b}, or {it:beta} != {it:b}. 
 The value(s) of {it:b} are given in the {help numlist:numlist}. 
-The {help numlist:numlist} is processed as in the 
-{cmd:cbar} option. 
-When exactly two values are given, these are interpreted
-as a range and are expanded to a uniform grid with {it:ngrid} over this range. 
-Otherwise, {it:values} are expanded normally.   
 
 {p 4 4 2}
-The sign of the inequality of the hypothesis is specified by the optional
+The sign of the (in)equality of the hypothesis is specified by the optional
 arguments. {cmd:lb}, and {cmd:ub} ("lower bound" and "upper bound") specify the
-hypotheses {it:beta} > # and {it:beta} < # respectively. 
+hypotheses {it:beta} > # and {it:beta} < # respectively. {cmd:eq} specifies the hypothesis,
+beta != 0.
 
 {p 4 4 2}
-Alternatively {cmd:beta(sign)} tests the hypothesis that sign({it:beta}) = sign({it:beta_med}),
-where {it:beta_med} is the coefficient on {it:indvar} of a regression of {it:depvar}
-on {it:indvar} and {it:controls}. For example if the {it:beta_med} > 0, then
-{cmd:sign} specifies the hypothesis {it:beta} > 0. 
+{cmd:sign} tests the hypothesis that sign({it:beta}) = sign({it:beta_med}),
+where {it:beta_med} is the coefficient on {it:indepvar} of a regression of {it:depvar}
+on {it:indepvar}, {it:controls}. For example if the {it:beta_med} > 0, then
+{cmd:sign} specifies the hypothesis {it:beta} > 0.
 
 {p 4 4 2}
-The default is {cmd:sign}.
+Note that the {cmd:eq} option can only be used when the {cmd:oster} option has
+been selected and the {cmd:delta} option has been specified with the option {cmd:eq}.
+If {cmd:eq} has been specified for either {cmd:delta} or {cmd:beta}, the other
+is set to {cmd:eq} automatically.
 
-{dlgtab:Other options}
-
-{phang}
-Additional options.
+{dlgtab:Additional options}
 
 {pmore}
 {opt ngrid}(#) The number of points to include in a grid of points for the
-sensitivity parameter or range of hypothesis.
+sensitivity parameter or range of hypothesis. This is only used for the number
+of points stored in {cmd:e(breakfront)}.
 
 {pmore}
 {opt plot} Produce a plot of the results.

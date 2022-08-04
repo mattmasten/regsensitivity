@@ -1,4 +1,4 @@
-*! version 1.0.0  6jun2022
+*! version 1.1.0  1aug2022
 
 // PROGRAM: Write tuples
 // DESCRIPTION: Writes the tuples in a table. Can be formated to represent

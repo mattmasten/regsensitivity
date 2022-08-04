@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  26may2022}{...}
+{* *! version 1.1.0  1aug2022}{...}
 {vieweralsosee "regensitivity" "regsensitivity"}{...}
 {viewerjumpto "Syntax" "regsensitivity_plot##syntax"}{...}
 {viewerjumpto "Description" "regsensitivity_plot##description"}{...}
@@ -53,14 +53,19 @@
 from a call to {cmd:{help regsensitivity:regsensitivity}}. When called
 after {cmd:{help regsensitivity_idset:regsensitivity bounds}}, it plots
 the upper and lower bounds of beta for a range of values of the sensitivity
-parameter, {it:rxbar} used in the analysis. When multiple values were
-provided for the secondary sensitivity parameter, {it:cbar},
+parameter used in the analysis (rxbar or delta). When multiple values were
+provided for the secondard sensitivity parameter (cbar or R-squared(long)),
 multiple sets of bounds are plotted on the same plot. 
+
+{pstd}
+When plotting the identified set for the Oster (2019) with the {cmd:eq} option
+selected for {cmd:delta}, the lines on the graph are the exact identified set.
+Otherwise, the plot shows the upper and lower bounds.
 
 {pstd}
 When called after {cmd:{help regsensitivity_breakdown:regsensitivity breakdown}},
 it plots the breakdown point as a function of the secondary sensitivity parameter
-{it:cbar}, or as a function of the hypothesis for the breakdown
+(cbar or R-squared(long)), or as a function of the hypothesis for the breakdown
 point.
 
 {pstd}
@@ -142,14 +147,14 @@ this package, and examples of its use.
 {phang}{cmd:. local w0 i.statea}{p_end}
 {pstd}Set the variables to use in the analysis
 
-{phang}{cmd:. regsensitivity bounds `y' `x' `w1' `w0', compare(`w1')}{p_end}
+{phang}{cmd:. regsensitivity bounds `y' `x' `w1' `w0', compare(`w1') oster delta(-2 2)}{p_end}
 {pstd}
 Calculates the identified set for Beta across a range of values of {it:rxbar},
 holding {it:cbar} fixed at 1. Displays a table with the results and stores the
 results in {cmd:e()}, and plots the results.
 
-{phang}{cmd:. regsensitivity plot, xline(.804)}{p_end}
+{phang}{cmd:. regsensitivity plot, xline(1)}{p_end}
 {pstd}
-Plots the results, and adds a verticle line where the breakdown point is reported.
+Plots the results, showing a vertical line at x = 1 where there is an asymptote.
 
 {phang} For more examples see this {browse "https://github.com/mattmasten/regsensitivity/blob/master/vignette/vignette.pdf":vignette}.

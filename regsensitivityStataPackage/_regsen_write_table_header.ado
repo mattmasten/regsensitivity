@@ -1,4 +1,4 @@
-*! version 1.0.0  6jun2022
+*! version 1.1.0  1aug2022
 
 // PROGRAM: Write Table Header
 // DESCRIPTION: Write a Header with two columns for a display table

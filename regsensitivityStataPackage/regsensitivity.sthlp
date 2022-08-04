@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  26may2022}{...}
+{* *! version 1.1.0  1aug2022}{...}
 {viewerjumpto "Syntax" "regsensitivity##syntax"}{...}
 {viewerjumpto "Description" "regsensitivity##description"}{...}
 {viewerjumpto "Further Information" "regsensitivity##further_information"}{...}
@@ -30,9 +30,10 @@
 
 {pstd}
 {cmd:regsensitivity} analyzes the sensitivity of regression coefficient estimates 
-to the presence of omitted variables. Relaxations of the no omitted
+to the presence of omitted variables. By default, relaxations of the no omitted
 variables assumption are indexed by sensitivity parameters as defined in 
-Diegert, Masten, and Poirier (2022).
+Diegert, Masten, and Poirier (2022). The package also implements the sensitivity analysis 
+in Oster (2019) and Masten and Poirier (2022), which use a different set of sensitivity parameters.
 
 {pstd}
 {cmd:regsensitivity bounds} calculates bounds on the regression coefficient under
@@ -51,7 +52,8 @@ in the identified set.
 {title:Further Information}
 
 {p 4 4 4}
-This package implements the sensitivity analysis described in {browse "https://arxiv.org/abs/2206.02303":Diegert, Masten, and Poirier (2022)}.
+This package implements the sensitivity analysis described in {browse "https://arxiv.org/abs/2206.02303":Diegert, Masten, and Poirier (2022)}, 
+{browse "https://www.tandfonline.com/doi/abs/10.1080/07350015.2016.1227711":Oster (2019)}, and {browse "https://arxiv.org/abs/2208.00552":Masten and Poirier (2022)}.
 
 {p 4 4 4}
 This {browse "https://github.com/mattmasten/regsensitivity/blob/master/vignette/vignette.pdf":vignette} provides a tutorial for use of this package walking through the empirical application in
@@ -68,4 +70,12 @@ Bazzi, Fiszbein, and Gebresilasse (2020) Frontier Culture: The Roots and Persist
 {marker DMP2022}{...}
 {phang}
 Diegert, Masten, and Poirier (2022) Assessing Omitted Variable Bias when the Controls are Endogenous, arXiv preprint
+
+{marker MP2022}{...}
+{phang}
+Masten, and Poirier (2022) The Effect of Omitted Variables on the Sign of Regression Coefficients, arXiv preprint
+
+{marker O2019}{...}
+{phang}
+Oster (2019) Unobservable Selection and Coefficient Stability: Theory and Evidence, {it:Journal of Business & Economic Statistics}
 {p_end}

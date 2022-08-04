@@ -1,4 +1,4 @@
-*! version 1.0.0  6jun2022
+*! version 1.1.0  1aug2022
 
 // PROGRAM: Plot Identified Set
 // DESCRIPTION: Post-estimation command to plot identified set
@@ -34,11 +34,19 @@ program _regsen_idset_plot
 	// 2. Process input
 	// =========================================================================
 	
-	if `ywidth' < 0{
+	if "`e(sparam1_option)'" == "eq" & `ywidth' < 0 & "`yrange'" == ""{
+		// if plotting oster with equal, get the range in the 
+		// calculated results if nothing else specified
+		matrix `idset' = e(idset1)
+		mata: yrange = minmax(st_matrix("`idset'"))
+		mata: st_local("yrange", strofreal(yrange[1]) + ///
+		                         " " + strofreal(yrange[2]))
+	}
+	else if `ywidth' < 0{
 		// if ywidth not given and not plotting oster equal, get the
 		// width as the 95th percentile of the values
 		matrix `idset' = e(idset1)
-		local varx = 1 / e(sumstats)["Var(X)", 1]
+		local varx = e(sumstats)["Var(X)", 1]
 		local beta_med = e(sumstats)["Beta(medium)", 1]
 		mata: ywidth = ywidth_default(st_matrix("`idset'"), `varx', `beta_med', .95)
 		mata: st_local("ywidth", strofreal(ywidth))
@@ -53,17 +61,19 @@ program _regsen_idset_plot
 		local ylabmid = round(e(sumstats)["Beta(medium)", 1])
 		if !(`ylabmid' < `ylabmax' & `ylabmid' > `ylabmin'){
 			local ylabmid 
-		} 
-		local labdist = min(`ylabmax' - `ylabmid', `ylabmid' - `ylabmin')
-		local labdistmax = `ylabmax' - `ylabmin'
-		if `labdist' < `labdistmax' * .05{
-			local ylabmid 
-		} 
+		}
+		else{
+			local labdist = min(`ylabmax' - `ylabmid', `ylabmid' - `ylabmin')
+			local labdistmax = `ylabmax' - `ylabmin'
+			if `labdist' < `labdistmax' * .05{
+				local ylabmid 
+			} 
+		}
 		local ylabel "`ylabmin' `ylabmid' `ylabmax', norescale nogrid angle(0) notick"
 	}
 	else {
 		// otherwise get yrange from ywidth
-		scalar `stdx' = 1/sqrt(e(sumstats)["Var(X)", 1])
+		scalar `stdx' = sqrt(e(sumstats)["Var(X)", 1])
 		scalar `bmed' = e(sumstats)["Beta(medium)", 1]
 		local ylabmid = round(`bmed')
 		local ylabwidth = floor(`stdx' * `ywidth')
@@ -159,6 +169,9 @@ program _regsen_idset_plot
 	else if "`e(analysis)'" == "DMP (2022)" {
 		local subtitle `""Regression Sensitivity Analysis (DMP 2022), Bounds""' 
 	}
+	else if "`e(analysis)'" == "Oster (2019)"{
+		local subtitle `""Regression Sensitivity Analysis (Oster 2019), Bounds ""' 
+	} 
 	
 	// process overall display options with defaults
 	local poptions xtitle ytitle /*
@@ -206,29 +219,106 @@ program _regsen_idset_plot
 	// 3. Main plot
 	// =========================================================================
 	
-
-	// save identified set values to active dataset
-	forvalues i= 1/`nsparam2' {
-		matrix `idset' = e(idset`i')
-		matrix colnames `idset' = rx`i' lower`i' upper`i'
-		quietly svmat `idset', names(col)
+	if "`e(sparam1_option)'" == "eq" {
+		local rmax = e(sparam2_vals)[1,1]
+		plot_oster , rmax(`rmax') bmin(`ymin') bmax(`ymax') plotspecs(`plotspecs')
 	}
-
-	forvalues i=1/`nsparam2'{
-		local lp : word `i' of `boundpatterns'
-		local lc : word `i' of `boundcolors'
-		local newplot_ub `"(line upper`i' rx`i', lc(`lc') lp(`lp') `boundoptions')"'
-		local newplot_lb `"(line lower`i' rx`i', lc(`lc') lp(`lp') `boundoptions')"'
-		local lineplots `"`lineplots' `newplot_ub' `newplot_lb'"'
-		quietly replace lower`i' = . if lower`i' < `ymin'
-		quietly replace upper`i' = . if upper`i' > `ymax'
-	}
+	else {
+		// save identified set values to active dataset
+		forvalues i= 1/`nsparam2' {
+			matrix `idset' = e(idset`i')
+			matrix colnames `idset' = rx`i' lower`i' upper`i'
+			quietly svmat `idset', names(col)
+		}
 	
-	twoway `lineplots', `plotspecs' `leg' xlabel(`xlabel') xscale(`xscale') 
+		forvalues i=1/`nsparam2'{
+			local lp : word `i' of `boundpatterns'
+			local lc : word `i' of `boundcolors'
+			local newplot_ub `"(line upper`i' rx`i', lc(`lc') lp(`lp') `boundoptions')"'
+			local newplot_lb `"(line lower`i' rx`i', lc(`lc') lp(`lp') `boundoptions')"'
+			local lineplots `"`lineplots' `newplot_ub' `newplot_lb'"'
+			quietly replace lower`i' = . if lower`i' < `ymin'
+			quietly replace upper`i' = . if upper`i' > `ymax'
+		}
 		
+		twoway `lineplots', `plotspecs' `leg' xlabel(`xlabel') xscale(`xscale') 
+		
+		
+		
+	}
 		
 	quietly use `active_data', clear
 
+end
+
+// PROGRAM: Plot Identified Set for Oster (2019)
+// DESCRIPTION: Plot identified set for setting where Delta = d exactly.
+// IMPLEMENTATION NOTES:
+//     - This is implemented by calculating the Beta -> Delta(Beta) function
+//       and rotating it 90 degrees. However, a quirk of Stata is that switching
+//       the axes is only possibly when using `twoway function`. Therefore, 
+//       we input the Beta -> Delta(Beta) function directly as a function to
+//       twoway.
+//     - The range of Delta is set by the values in the call to regsensitivity bounds
+//     - The range of Beta is also set by the values to the call to regsensitivity
+//       bounds unless overriden by an input of `ywidth` or `yrange`.
+program define plot_oster
+
+	syntax , [rmax(real 1) dmin(real -1) dmax(real 1) /// 
+	          bmin(real -5) bmax(real 5) plotspecs(string asis)] 
+	
+	local bs  = e(sumstats)[1, 1]
+	local bm  = e(sumstats)[2, 1]
+	local rs  = e(sumstats)[3, 1]
+	local rm  = e(sumstats)[4, 1]
+	local vy  = e(sumstats)[5, 1]
+	local vx  = e(sumstats)[6, 1]
+	local vxr = e(sumstats)[7, 1]
+	
+	local func ( 							///
+			(`bm' - x) * (`rm' - `rs') * `vy' * `vxr'   	///
+			+ (`bm' - x) * `vx' * `vxr' * 			///
+			(`bs' - `bm')^2					///
+			+ 2 * (`bm' - x)^2 * (`vxr' * 			///
+			(`bs' - `bm') * `vx')				///
+			+ ((`bm' - x)^3) * 				///
+			((`vxr' * `vx' - `vxr'^2))			///
+		) / (							///
+			(`rmax' - `rm') * `vy' * (`bs' - `bm') * `vx'	///
+			+ (`bm' - x) * (`rmax' - `rm') * `vy' * 	///
+			  (`vx' - `vxr')				///
+			+ ((`bm' - x)^2) * 				///
+			  (`vxr' * (`bs' - `bm') * `vx')		///
+			+ ((`bm' - x)^3) * 				///
+			  (`vxr' * `vx' - `vxr'^2)			///
+		)
+	
+	mata: dminmax = minmax(st_matrix("e(idset1)")[,1])
+	mata: st_local("dmin", strofreal(dminmax[1]))
+	mata: st_local("dmax", strofreal(dminmax[2]))
+	
+	local func cond(`func' < `dmax', `func', .)
+	local func cond(`func' > `dmin', `func', .)
+	
+	local dlabl = ceil(`dmin')
+	local dlabu = floor(`dmax')
+	local dlab `dlabl' 0 `dlabu'
+	
+	matrix segs = (`bmin', e(roots), `bmax')
+	local nsegs : colsof(segs)
+	
+	local deltaplots
+	forvalues i=2/`nsegs'{
+		local ld = segs[1, `=`i' - 1'] +.000001
+		local ud = segs[1, `i'] - .000001
+		local deltaplots `deltaplots' function y=`func', range(`ld' `ud') /*
+		               */ n(1000) lwidth(.3) lcolor(black) horizontal
+		if `i' < `nsegs' {
+			local deltaplots `deltaplots' ||
+		}
+	}
+	graph twoway `deltaplots' legend(off) xlabel(`dlab') n(1000) `plotspecs'
+	
 end
 
 mata:

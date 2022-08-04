@@ -1,4 +1,4 @@
-*! version 1.0.0  6jun2022
+*! version 1.1.0  1aug2022
 
 // PROGRAM: Plot Breakdown Frontier
 // DESCRIPTION: Post-estimation command to plot identified set
@@ -13,8 +13,7 @@ program _regsen_breakfront_plot
 			     xtitle(string) ytitle(string) ///
 			     graphregion(string) bgcolor(string) ///
 			     ylabel(string) yscale(string) ///
-			     xline(string) xscale(string)) ///
-			     xline(string) name(string) *] 		
+			     xlabel(string) xscale(string)) name(string) *] 		
 	
 	
 	// =========================================================================
@@ -28,6 +27,17 @@ program _regsen_breakfront_plot
 	// =========================================================================
 	
 	matrix `breakfront' = e(breakfront)
+	
+	// report the absolute values of the breakdown frontier
+	// IMPLEMENTATION NOTE: looping stata rather than vectorized mata
+	// because that drops the labels and because it overwrites .b, which
+	// is the code we are using for +inf
+	local nbreakfront : rowsof(`breakfront')
+	forvalues i=1/`nbreakfront'{
+		if `breakfront'[`i', 2] < .{
+			matrix `breakfront'[`i', 2] = abs(`breakfront'[`i', 2]) 
+		}
+	}
 	
 	// save the parameter names for the axis labels
 	local axis_labels : colnames e(breakfront)
@@ -60,6 +70,9 @@ program _regsen_breakfront_plot
 	else if "`e(analysis)'" == "DMP (2022)" {
 		local subtitle `""Regression Sensitivity Analysis (DMP 2022), Breakdown""' 
 	}
+	else if "`e(analysis)'" == "Oster (2019)"{
+		local subtitle `""Regression Sensitivity Analysis (Oster 2019), Breakdown""' 
+	} 
 		
 	// process overall display options with defaults
 	local poptions xtitle ytitle /*
@@ -86,6 +99,8 @@ program _regsen_breakfront_plot
 	// 3. Main plot
 	// =========================================================================
 	
+	
+	
 	twoway line y x, lcolor(`lcolor') ///
 	title(`title') subtitle(`subtitle') xtitle(`xtitle') ytitle(`ytitle') /// 
 	graphregion(`graphregion') plotregion(`plotregion') ///
@@ -93,7 +108,6 @@ program _regsen_breakfront_plot
 	xlabel(`xlabel') xscale(`xscale') ///
 	name(`name', replace)/*
 	*/`options'	
-	
 	
 	drop x y
 

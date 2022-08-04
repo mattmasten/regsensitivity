@@ -1,4 +1,4 @@
-*! version 1.0.0  6jun2022
+*! version 1.1.0  1aug2022
 
 // PROGRAM: Write Scalar Table
 // DESCRIPTION: Writes a table of scalar data
@@ -41,7 +41,9 @@ program _regsen_write_scalar_table
 	if "`percent'" != ""{
 		local nvals : rowsof `vals'
 		forvalues i = 1/`nvals'{
-			matrix `vals'[`i',2] = `vals'[`i',2] * 100
+			if `vals'[`i',2] < .{
+				matrix `vals'[`i',2] = `vals'[`i',2] * 100
+			}
 		}
 		local fmt %-`=`ndig' + 2'.`=`ndig' - 2'f
 		local suffix = `""%""'
@@ -65,7 +67,15 @@ program _regsen_write_scalar_table
 // 		else{
 // 			local valinput `" `valinput' _col(`col_loc') as result `fmt' `val' `suffix'"'
 // 		}
-		local valinput `" `valinput' _col(`col_loc') as result `fmt' `val' `suffix'"'
+		if `val' < . {
+			local valinput `"`valinput' _col(`col_loc') as result `fmt' `val' `suffix'"'			
+		}
+		else if `val' == .a {
+			local valinput `"`valinput' _col(`col_loc') as result "-inf" "'
+		}
+		else if `val' == .b {
+			local valinput `"`valinput' _col(`col_loc') as result "+inf" "'
+		}
 		di `valinput'
 	}
 	
