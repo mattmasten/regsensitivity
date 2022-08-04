@@ -1,6 +1,6 @@
 # regsensitivity: A Stata Package for Regression Sensitivity Analysis
 
-**Description**: Omitted variables are one of the most important threats to the identification of causal effects. In linear models, the well known Omitted Variable Bias formula shows how an omitted variable can bias the regression coefficient on the covariate of interest when that covariate is correlated with the omitted variable. Since is often implausible to assume that data has been collected on every relevant variable, applied research is often vulernable to this bias. Nonetheless, omitted variable bias can be quantified under various alternative assumptions about the relationship between the omitted variable and the covariate of interest. Using these techniques, researchers can analyze how sensitive their results are to omitted variable bias.
+**Description**: Omitted variables are one of the most important threats to the identification of causal effects. In linear models, the well known Omitted Variable Bias formula shows how an omitted variable can bias the regression coefficient on the covariate of interest when that covariate is correlated with the omitted variable. Since is often implausible to assume that data has been collected on every relevant variable, applied research is often vulnerable to this bias. Nonetheless, omitted variable bias can be quantified under various alternative assumptions about the relationship between the omitted variable and the covariate of interest. Using these techniques, researchers can analyze how sensitive their results are to omitted variable bias.
 
 Several methods of sensitivity analysis for linear models have been proposed in the literature. This repository contains a Stata module that implements the methods proposed in Diegert, Masten, and Poirier (2022), Oster (2019)[^1], and Masten and Poirier (2022). In each of these papers, the authors define a set of sensitivity parameters which index relaxations of the assumption that the covariate of interest is uncorrelated with any unobserved variables. The parameter of interest in both cases is $\beta_\text{long}$, the coefficient on that covariate of interest in the infeasible regression that includes the unobserved variables. Using this framework, we can ask two questions:
 
@@ -30,7 +30,7 @@ help regsensitivity
 ## Subdirectories
 
 - regsensitivityStataPackage - Contains all Stata package files.
-- vignette - Contains a vignette showing how to use the module. Specifically, it walks throuth the empirical illustration of Bazzi, Fiszbein, and Gebresilasse (2020) that is used in Diegert, Masten, and Poirier (2022).
+- vignette - Contains a vignette showing how to use the module. Specifically, it walks through the empirical illustration of Bazzi, Fiszbein, and Gebresilasse (2020) that is used in Diegert, Masten, and Poirier (2022).
 
 ## Troubleshooting
 
@@ -44,12 +44,12 @@ Diegert, Masten, and Poirier (2022) [Assessing Omitted Variable Bias when the Co
 
 Masten, and Poirier (2022) [The Effect of Omitted Variables on the Sign of Regression Coefficients](https://arxiv.org/abs/2208.00552), arXiv working paper
 
-Oster (2019) [Unobservable Selection and Coefficient Stability: Theory and Evidence](https://www.brown.edu/research/projects/oster/sites/brown.edu.research.projects.oster/files/uploads/Unobservable_Selection_and_Coefficient_Stability.pdf), _Journal of Business & Economic Statistics_ ([Joural link](https://www.tandfonline.com/doi/abs/10.1080/07350015.2016.1227711?journalCode=ubes20))
+Oster (2019) [Unobservable Selection and Coefficient Stability: Theory and Evidence](https://www.brown.edu/research/projects/oster/sites/brown.edu.research.projects.oster/files/uploads/Unobservable_Selection_and_Coefficient_Stability.pdf), _Journal of Business & Economic Statistics_ ([Journal link](https://www.tandfonline.com/doi/abs/10.1080/07350015.2016.1227711?journalCode=ubes20))
 
 ## License
 
 &copy; 2022 Paul Diegert, Matt Masten, Alexandre Poirier
 
-The contents of this repsoitory are distributed under the MIT licesnse. See file `LICENSE` for details.
+The contents of this repository are distributed under the MIT license. See file `LICENSE` for details.
 
 [^1]: The analysis of Oster (2019) is also implemented in another Stata package, [`psacalc`](https://ideas.repec.org/c/boc/bocode/s457677.html), written by Emily Oster. Our package `regsensitivity` extends `psacalc`, providing additional functionality and a consistent user interface to compare results from various sensitivity analyses.
