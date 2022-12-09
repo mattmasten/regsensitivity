@@ -14,15 +14,15 @@ The package can be used to perform both of these sensitivity analyses using the 
 
 ## Requirements
 
-- Stata version 15 or later
+- Stata version 16 SE or 17 SE
 
 ## Installation
 
 To install `regsensitivity` from within Stata:
 ```
-ssc install regsensitivity
+ssc install regsensitivity, all
 ```
-It can also be installed manually by copying all files in the `regsensitivityStataPackage` subdirectory to your `Stata/ado/personal` directory. For explanation of the syntax:
+The `all` option will install the accompanying dataset used in the vignette as well as the package itself. It can also be installed manually by copying all files in the `regsensitivityStataPackage` subdirectory to your `Stata/ado/personal` directory. For explanation of the syntax:
 ```
 help regsensitivity
 ```
