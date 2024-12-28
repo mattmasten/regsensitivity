@@ -1,4 +1,4 @@
-*! version 1.1.0  1aug2022
+*! version 1.2.0 Paul Diegert, Matt Masten, Alex Poirier 29sept24
 
 // PROGRAM: Write Table Header
 // DESCRIPTION: Write a Header with two columns for a display table
@@ -21,8 +21,7 @@ program _regsen_write_table_header
 			   right_labels(string asis) right_vals(string asis) right_types(string asis) ///
 			   left_colon(integer 18) right_col(integer 48) equal_col(integer 67) right_bord(integer 80) ///
 			   n_digits(integer 3)]
-	
-	
+		
 	// =====================================================================
 	// 1. Calculate formatting paramters
 	// =====================================================================

@@ -48,6 +48,16 @@ in the identified set.
 {cmd:regsensitivity plot} is a post-estimation command that can be run after
 {cmd:regsensitivity bounds} or {cmd:regsensitivity breakdown} to visualize the results.
 
+{marker options}{...}
+{title:Options}
+
+{phang}
+{cmd: noplot} When called without any subcommands, regsensitivity produces sensitivity summary 
+statistics and sensitivity plots for each method. The default auxiliary parameters are set to 
+rybar = +inf and cbar = 1 for DMP, and R2long = 1 for Oster. These defaults can be changed by
+using the options in the above subcommands. When calling regsensitivity without a subcommand,
+select the noplot option to suppress these default plots. {sf} 
+
 {marker further_information}{...}
 {title:Further Information}
 

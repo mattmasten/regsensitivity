@@ -54,6 +54,7 @@ deviations from identifying assumptions, default all controls{p_end}
 
 {syntab: Sensitivity parameters (dmp)}
 {synopt:{opt rx:bar}({help regsensitivity_bounds##param_spec:param_spec})}Magnitude of effect of the omitted variable on {it:indepvar} relative to comparison controls{p_end}
+{synopt: {opt ry:bar}({help regsensitivity_bounds##param_spec:param_spec})}Magnitude of effect of the omitted variable on {it:depvar} relative to comparison controls{p_end}
 {synopt:{opt c:bar}({help regsensitivity_bounds##param_spec:param_spec})}Maximum correlation
 between comparison controls and the omitted variable; default 1{p_end}
 
@@ -66,7 +67,9 @@ between comparison controls and the omitted variable; default 1{p_end}
 {synopt:{opt beta}({help regsensitivity_bounds##hypothesis:hypothesis})}Calculate breakdown point relative to this hypothesis; default {help regsensitivity_bounds##hypothesis:sign} {p_end}
 
 {syntab: Other}
+{synopt:{opt noproduct}} Interpret senstivity parameter input as tuple rather than product{p_end}
 {synopt:{opt ngrid(#)}} Number of points in a grid when expanding values of a sensitivity parameter{p_end}
+{synopt:{opt table}} Display the results in a table{p_end}
 {synopt:{opt plot}} Plot the results{p_end}
 
 {marker description}{...}
@@ -84,8 +87,7 @@ When {cmd:dmp} is selected, the
 sensitivity analysis in Diegert, Masten, and Poirier (2022) is implemented. In
 that analysis, there are three sensitivity parameters, {it:rxbar}, {it:rybar},
 and {it:cbar}. Bounds are calculated for a range of values of the sensitivity
-parameters given in the {cmd:rxbar} and {cmd:cbar} options, while {it:rybar} is 
-fixed at +infty.
+parameters given in the {cmd:rxbar}, {cmd:rybar}, and {cmd:cbar} options.
 
 {pstd}
 When {cmd:oster} is selected, the analysis in Oster (2019) is implemented, along with the Masten and Poirier (2022) extensions. 
@@ -99,7 +101,8 @@ across all {it:delta} whose absolute value is bounded by the values given in the
 option.
 
 {pstd}
-The breakdown point for the hypothesis specified in the {cmd:beta} option is also calculated.
+The breakdown point for the hypothesis specified in the {cmd:beta} option is also calculated
+in some cases. See {help regsensitivity_bounds##remarks:Remarks} for further details.
 
 {pstd}
 Results of the analysis are displayed in a table and saved in {cmd:e()}. For details 
@@ -155,6 +158,12 @@ variable, {it:rxbar} is the ratio of the norms of the coefficients on the
 comparison controls and the unobserved variable. 
 
 {pmore}
+{cmd:rybar}({help regsensitivity_bounds##param_spec:param_spec}) This parameters is the
+analog to {cmd:rxbar} in the outcome regession. It is the ratio of the norms of the coefficients on the comparison controls and
+the unobserved variable in the infeasible regression of {it:depvar} on {it:indepvar} and the
+{it:controls} and the unobserved variable.
+
+{pmore}
 {cmd:cbar}({help regsensitivity_bounds##param_spec:param_spec}) The maximum correlation between the comparison controls and the unobserved variable.
 
 {p 4 4 2}
@@ -180,7 +189,13 @@ The {it:param_spec} option has the following format:
 {help numlist:numlist} [,eq bound relative]
 
 {p 4 4 2}
-The {help numlist:numlist} specifies the values of the 
+or
+
+{pmore}
+={it:param_exp}
+
+{p 4 4 2}
+In the first form, the {help numlist:numlist} specifies the values of the 
 sensitivity parameters to use in the analysis.
 
 {p 4 4 2}
@@ -218,16 +233,32 @@ each analysis:
 {col 25}{c |}
 {col 7}{cmd:maxovb}{col 25}{c |}{center 20:Not Implemented}{col 45}{center 20:Default}{col 65}{center 20:Implemented}
 
+{p 4 4 2}
+In the second form, {it:param_exp} is an expression involving the other sensitivity
+parameters. For example, {cmd:rybar(=rxbar)} will set {cmd:rybar} = {cmd:rxbar} given the
+range of values chosen for {cmd:rxbar}.
+
 {dlgtab:Breakdown Hypothesis}
 
 {phang}
-This option specifies the hypothesis or hypotheses for which the breakdown point(s)
+This option specifies the hypothesis or hypotheses for which the breakdown point
 will be calculated. 
 
 {pmore}
 {opt beta}({help regsensitivity_bouunds##hypothesis:hypothesis}) The coefficient 
 on {it:indepvar} in a theoretical regression of {it:depvar} on 
 {it:indepvar}, {it:controls}, and an omitted variable.
+
+{p 4 4 2}
+The breakdown point is only calculated under certain circumstances. When
+{cmd:dmp} is selected, the breakdown point for {cmd:rxbar} is calculated
+if {cmd:rybar} and {cmd:cbar} are scalars or if {cmd:rybar} is specified
+as a function of {cmd:rxbar}. For some very small values of {cmd:rybar},
+the breakdown frontier is not yet implmented. See {help regsensitivity_bounds##issues:Known Issues}.
+
+{p 4 4 2}
+If {cmd:oster} is selected, then the breakdown point for {cmd:delta} is 
+calculated if {cmd:r2long} is scalar.
 
 {marker hypothesis}{...}
 {p 4 4 2}
@@ -263,21 +294,55 @@ is set to {cmd:eq} automatically.
 
 {dlgtab:Additional options}
 
-{pmore}
+{p 4 4 2}
+{opt noproduct} By default, all possible combinations of input sensitivity parameters
+are calcualted. For example, with the options {cmd:rxbar(.1 .2)} {cmd:ry(.1 .2)}, 
+all the pairs (.1, .1), (.1, .2), (.2, .1), and (.2, .2) are calculated. When the
+option {cmd:noproduct} is selected, the input paramters are zipped in the order they
+where input into a list of tuples, i.e., (.1, .1), (.2, .2) in the above example.
+
+{p 4 4 2}
 {opt ngrid}(#) The number of points to include in a grid of points for the
 sensitivity parameter or range of hypothesis. This is only used for the number
 of points stored in {cmd:e(idset#)}.
 
-{pmore}
-{opt plot} Show a plot of the results.
+{p 4 4 2}
+{opt table} Display the results in a table. If not specified, the default is to
+display a table only when only one sensitivity parameter varies.
+
+{p 4 4 2}
+{opt plot} Show a plot of the results. If not specified, the default is to
+display a plot only when one than one sensitivity parameter varies.
 
 {marker remarks}{...}
 {title:Remarks}
 
-{p 4 4 4}
+{p 4 4 2}
 See {help regsensitivity##further_information:here} for links to the articles 
 this package is based on, more detailed documentation on the implementation in 
 this package, and examples of its use.
+
+{p 4 4 2}
+
+{marker issues}{...}
+{title:Known issues}
+
+{p 4 4 2}
+The computational approach for the analyses in Digert, Masten, and Poirier (2022)
+depends on the sensitivity parameters specified. When {cmd:rybar} = +inf, all
+estimates can be calculated analytically and don't involve significant computational
+cost. When {cmd:rybar} < +inf and {cmd:cbar} > 0, calculating the bounds on {it:Beta}
+involves numerically solving a nonconvex constrained optimization problem. The
+computational complexity of this problem is constant in the number of covariates, and the implementation
+is typically quite fast, but this can still take a few minutes when calculated over a grid
+of a hundred or more sensitivity parameters. At present there is no progress report
+during these computations.
+
+{p 4 4 4}
+There is also a range of sensitivity
+parameter values where {cmd:rybar} is small relative to {cmd:rxbar} for which 
+the numerical solver is not yet implemented in this package. At present {cmd:regsensitivity} 
+will exit with an error if values of {cmd:rxbar} and {cmd:rybar} in this range are specified.
 
 {marker results}{...}
 {title:Stored results}
@@ -311,9 +376,8 @@ this package, and examples of its use.
 {p2col 5 15 19 2: Matrices}{p_end}
 {synopt:{cmd:e(sumstats)}}Summary statistics displayed in the header of the output{p_end}
 {synopt:{cmd:e(idset_table)}}identified set exactly as displayed in the output{p_end}
-{synopt:{cmd:e(sparam2_vals)}}Values of the secondary sensitivity parameter{p_end}
-{synopt:{cmd:e(idset#)}}Identified set for each value of {cmd:e(sensparam1)} holding {cmd:e(sensparam2)} fixed at value # of {cmd:e(sparam2_vals)}{p_end}
-
+{synopt:{cmd:e(idset)}}Identified set for each combination of sensitivity parameters specified (this
+can include more values than are displayed in the output table{p_end}
 {marker examples}{...}
 {title:Examples}
 

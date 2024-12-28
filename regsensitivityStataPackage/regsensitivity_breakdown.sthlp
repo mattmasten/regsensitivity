@@ -53,6 +53,7 @@ deviations from identifying assumptions, default all controls{p_end}
 {synopt:{opt nocompare}({help varlist:varlist})}Include all controls in comparison controls except these{p_end}
 
 {syntab: Sensitivity parameters (dmp)}
+{synopt: {opt ry:bar}({help regsensitivity_bounds##param_spec:param_spec})}Magnitude of effect of the omitted variable on {it:depvar} relative to comparison controls{p_end}
 {synopt:{opt c:bar}({help regsensitivity_breakdown##param_spec:param_spec})}Maximum correlation
 between the comparison controls and the omitted variable; default 1{p_end}
 
@@ -82,8 +83,7 @@ When {cmd:dmp} is selected, the sensitivity analysis in Diegert, Masten, and Poi
 (2022) is implemented. In that analysis, there are three sensitivity parameters, 
 {it:rxbar}, {it:rybar}, and {it:cbar}. The breakdown point is calculated for 
 {it:rxbar}, holding the values of {it:rybar} and {it:cbar} 
-fixed. The value of {it:cbar} are given in {cmd:cbar} option, while {it:rybar} is 
-fixed at +inf. 
+fixed. The value of {it:cbar} are given in {cmd:cbar} and {cmd:rybar} options.
 
 {pstd}
 When {cmd:oster} is selected, the analysis in Oster (2019) is implemented, along with the Masten and Poirier (2022) extensions. In 
@@ -146,6 +146,11 @@ details on the definition of each sensitivity parameter, see the referenced pape
 Diegert, Masten, and Poirier (2022)
 
 {pmore}
+{cmd:rybar}({help regsensitivity_bounds##param_spec:param_spec}) Ratio of the norms of the coefficients on the comparison controls and
+the unobserved variable in the infeasible regression of {it:depvar} on {it:indepvar} and the
+{it:controls} and the unobserved variable.
+
+{pmore}
 {cmd:cbar}({help regsensitivity_breakdown##param_spec:param_spec}) The maximum correlation between the comparison controls and an unobserved variable.
 
 {p 4 4 2}
@@ -166,7 +171,13 @@ The {it:param_spec} option has the following format:
 {help numlist:numlist} [,eq bound relative]
 
 {p 4 4 2}
-The {help numlist:numlist} specifies the values of the 
+or
+
+{pmore}
+={it:param_exp}
+
+{p 4 4 2}
+In the first form, the {help numlist:numlist} specifies the values of the 
 sensitivity parameters to use in the analysis.
 
 {p 4 4 2}
@@ -203,6 +214,11 @@ each analysis:
 {col 7}{cmd:r2long}{col 25}{c |}{center 20:Default}{col 45}{center 20:Not Implemented}{col 65}{center 20:Implemented}
 {col 25}{c |}
 {col 7}{cmd:maxovb}{col 25}{c |}{center 20:Not Implemented}{col 45}{center 20:Default}{col 65}{center 20:Implemented}
+
+{p 4 4 2}
+In the second form, {it:param_exp} is an expression involving the other sensitivity
+parameters. At present this is only implemented when {cmd:dmp} with {cmd:rybar(=rxbar)}.
+In this case the breakdown point is calculated for {it:rxbar} where {it:rxbar} = {it:rybar}.
 
 {dlgtab:Breakdown Hypothesis}
 

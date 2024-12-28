@@ -1,4 +1,4 @@
-*! version 1.1.0  1aug2022
+*! version 1.2.0 Paul Diegert, Matt Masten, Alex Poirier 29sept24
 
 // PROGRAM: Plot Breakdown Frontier
 // DESCRIPTION: Post-estimation command to plot identified set

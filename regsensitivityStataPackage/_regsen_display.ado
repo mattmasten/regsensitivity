@@ -1,4 +1,4 @@
-*! version 1.1.0  1aug2022
+*! version 1.2.0 Paul Diegert, Matt Masten, Alex Poirier 29sept24
 
 // global default display settings
 // global left_colon = 18 // placement of colon in left column of header
@@ -46,7 +46,11 @@ end
 program display_idset_table
 
 	// process input
-	syntax anything, [labels_width(integer 35) right_bord(integer 80) shortheader]
+	syntax anything, 				///
+	      [labels_width(integer 35) 		///
+	       right_bord(integer 80) 			///
+	       lab_digits(integer 3)			///
+	       shortheader]				///
 	
 	tempname breakdown
 	
@@ -55,13 +59,22 @@ program display_idset_table
 	// =====================================================================
 
 	// Breakdown hypothesis
-	if `e(hypoval)' < .{
+	local breakdown_lbl Breakdown Point
+	local hypothesis_lbl Hypothesis
+	
+	if !`e(include_breakdown)' {
+		local breakdown_lbl
+	}
+	else if `e(hypoval)' < .{
 		local hypothesis = strofreal(`e(hypoval)', "%-10.3g")
 	}
 	else {
 		local hypothesis Beta(Hypothesis)
 	}
-	if "`e(hyposign)'" == "=" {
+	if !`e(include_breakdown)' {
+		local hypothesis_lbl
+	}
+	else if "`e(hyposign)'" == "=" {
 		local hypothesis `"Beta != `hypothesis'"'
 	}
 	else {
@@ -69,14 +82,11 @@ program display_idset_table
 	}
 	
 	// extract summary statistics on DGP
-	local nrows = rowsof(e(sumstats))
-	local lbls : rownames(e(sumstats))
-	
-	// unpack the matrix of summary stats into a macro to be displayed
-	forvalues row = 1/`nrows' {
+	local n_stats = rowsof(e(sumstats))
+	local stat_lbls : rownames(e(sumstats))
+
+	forvalues row = 1/`n_stats' {
 		local v = e(sumstats)[`row', 1]
-		local l : word `row' of `lbls'
-		local ls `"`ls' "`l'""'
 		local vs `"`vs' `v'"'
 		local ts `"`ts' float"'
 	}
@@ -86,9 +96,21 @@ program display_idset_table
 	// 2.1 Formatting
 	// =====================================================================
 	
+	// number of label levels
+	local lab_levels: word count `r(nonscalar_sparam)'
+	local lab_width_each = 4 + 1 + `lab_digits'
+	
 	// column labels
-	local tbl_header `"as text " `e(sparam1)'" _col(`labels_width') " `e(param)'""'
-
+	
+	tempname mat_sparams
+	matrix `mat_sparams' = `anything'[1...,1..`lab_levels']	
+	local sparams: colnames(`mat_sparams')
+	local tbl_header "_col(2) as text "
+	foreach sparam in `sparams' {
+		local tbl_header `tbl_header' %-`lab_width_each's "`sparam'"	
+	}
+	local tbl_header `tbl_header' _col(`labels_width') " `e(param)'"
+	
 	// determine if sets should be displayed as intervals or finite sets
 	if "`e(sparam1_option)'" == "eq" {
 		local tuple_type set
@@ -97,40 +119,81 @@ program display_idset_table
 		local tuple_type interval
 	}
 	
-	// breakdown point as percentage
-	if e(breakdown) < .{
-		scalar `breakdown' = abs(e(breakdown))
-		local right_vals `"right_vals(e(N) `vs' . `breakdown')"'
-		local right_types `"right_types(int `ts' str percent)"'
+	// left header table
+	local left_labels `"`left_labels' Analysis"' 
+	local left_vals `"`left_vals' "`e(analysis)'""'
+	local left_labels `"`left_labels' """' 
+	local left_vals `"`left_vals' ."' 
+	local left_labels `"`left_labels' Treatment"'
+	local left_vals `"`left_vals' `e(indvar)'"'
+	local left_labels `"`left_labels' Outcome"'
+	local left_vals `"`left_vals' `e(depvar)'"'
+	local left_labels `"`left_labels' """'
+	local left_vals `"`left_vals' ."'
+	local left_labels `"`left_labels' """'
+	local left_vals `"`left_vals' ."'
+	local left_labels `"`left_labels' """'
+	local left_vals `"`left_vals' ."'
+	local left_labels `"`left_labels' """'
+	local left_vals `"`left_vals' ."'
+	local left_labels `"`left_labels' """'
+	local left_vals `"`left_vals' ."'
+	if `e(include_breakdown)' {
+		local left_labels `"`left_labels' "Hypothesis""'
+		local left_vals `"`left_vals' "`hypothesis'""'
 	}
-	else {
-		local right_vals `"right_vals(e(N) `vs' . +inf)"'
-		local right_types `"right_types(int `ts' str str)"'
+	local left_labels `"`left_labels' "Other Params""'
+	local left_vals `"`left_vals' "`e(other_sensparams)'""'
+	
+	// right header table
+	local right_labels = `""Number of obs""'
+	local right_vals e(N)
+	local right_types int
+	forvalues row = 1/`n_stats' {
+		local v = e(sumstats)[`row', 1]
+		local l : word `row' of `stat_lbls'
+		local right_labels = `"`right_labels' "`l'""'
+		local right_vals `"`right_vals' `v'"'
+		local right_types `"`right_types' float"'
+		
+	}
+	local right_labels `"`right_labels' """'
+	local right_vals `"`right_vals' ."'
+	local right_types `"`right_types' str"'
+	if `e(include_breakdown)' {
+		local right_labels `"`right_labels' "Breakdown Point""'
+		if e(breakdown) < . {
+			scalar `breakdown' = abs(e(breakdown))
+			local right_vals `"`right_vals' `breakdown'"'
+			local right_types `"`right_types' percent"'
+		}
+		else {
+			local right_vals `"`right_vals' +inf"'
+			local right_types `"`right_types' str"'	
+		}
+		
 	}
 	
 	// =====================================================================
 	// 2.2 Write table 
 	// =====================================================================
-	
+
 	di 
 	if "`shortheader'" == "" {
 		_regsen_write_table_header, ///
 			title(Regression Sensitivity Analysis, Bounds) ///
-			left_labels(Analysis "" Treatment Outcome "" "" "" "" "" /*
-			*/ Hypothesis "Other Params" ) ///
-			left_vals("`e(analysis)'" . `e(indvar)' `e(depvar)' /*
-			*/ . . . . . `"`hypothesis'"' `"`e(other_sensparams)'"') ///
-			right_labels("Number of obs" `ls' "" `e(sensparam1)' /*
-			*/ "Breakdown point") ///
-			`right_vals' ///
-			`right_types'
+			left_labels(`left_labels') ///
+			left_vals(`left_vals') ///
+			right_labels(`right_labels') ///
+			right_vals(`right_vals') ///
+			right_types(`right_types')
 			di
 	}
 	
 	di as text `"{hline `right_bord'}"'
 	di `tbl_header'
 	di as text `"{hline `right_bord'}"'
-	_regsen_write_tuples `anything', tuple_type(`tuple_type')
+	_regsen_write_tuples `anything', tuple_type(`tuple_type') lab_levels(`lab_levels')
 	di as text `"{hline `right_bord'}"'
 
 end

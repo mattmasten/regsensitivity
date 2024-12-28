@@ -1,4 +1,4 @@
-*! version 1.1.0  1aug2022
+*! version 1.2.0 Paul Diegert, Matt Masten, Alex Poirier 29sept24
 
 // PROGRAM: Plot Identified Set
 // DESCRIPTION: Post-estimation command to plot identified set
@@ -20,11 +20,23 @@ program _regsen_idset_plot
 			     legoptions(string) ///
 			     noLEGend *]		
 	
+	local oster 0
+	if "`e(sparam1)'" == "Delta" {
+		local oster 1
+	}
+	matrix idset = e(idset)
+	/* if `oster' {
+		matrix idset = e(idset1)
+	} 
+	else {
+		matrix idset = e(idset)	
+	} */
+
 	// =========================================================================
 	// 1. Temp names
 	// =========================================================================
 	
-	tempname idset bmed stdx
+	tempname idset bmed stdx idset_beta_only
 	tempfile active_data
 	
 	quietly save `active_data'
@@ -37,7 +49,7 @@ program _regsen_idset_plot
 	if "`e(sparam1_option)'" == "eq" & `ywidth' < 0 & "`yrange'" == ""{
 		// if plotting oster with equal, get the range in the 
 		// calculated results if nothing else specified
-		matrix `idset' = e(idset1)
+		matrix `idset' = idset
 		mata: yrange = minmax(st_matrix("`idset'"))
 		mata: st_local("yrange", strofreal(yrange[1]) + ///
 		                         " " + strofreal(yrange[2]))
@@ -45,10 +57,11 @@ program _regsen_idset_plot
 	else if `ywidth' < 0{
 		// if ywidth not given and not plotting oster equal, get the
 		// width as the 95th percentile of the values
-		matrix `idset' = e(idset1)
+		matrix `idset' = idset
 		local varx = e(sumstats)["Var(X)", 1]
 		local beta_med = e(sumstats)["Beta(medium)", 1]
-		mata: ywidth = ywidth_default(st_matrix("`idset'"), `varx', `beta_med', .95)
+		matrix `idset_beta_only' = `idset'[1..., "bmin".."bmax"]
+		mata: ywidth = ywidth_default(st_matrix("`idset_beta_only'"), `varx', `beta_med', .95)
 		mata: st_local("ywidth", strofreal(ywidth))
 	}
 	if "`yrange'" != ""{
@@ -85,9 +98,25 @@ program _regsen_idset_plot
 
 	}
 	
+	local n_nonscalar_params : word count `e(nonscalar_sparam)'
 	
-	local nsparam2: rowsof e(sparam2_vals)
-
+	if (`e(sparam_product)') &  (`n_nonscalar_params' > 1){
+		local i = 1
+		foreach param in `e(nonscalar_sparam)' {
+			matrix `idset' = idset
+			matrix `idset' = `idset'[1..., "`param'"]
+			mata: idset = st_matrix("`idset'")
+			mata: vals = uniqrows(idset)
+			mata: st_matrix("sparam`i'_vals", vals)
+			mata: st_local("nsparam`i'", strofreal(rows(vals)))
+			local i = `i' + 1
+		}
+	}
+	else { 
+		local nsparam1 = rowsof(idset)
+		local nsparam2 = 1
+	}
+	
 	// default to no legend
 	local leg `"legend(off)"'
 	if "`legoptions'" == ""{
@@ -139,7 +168,7 @@ program _regsen_idset_plot
 	// process legend for multiple plots
 	if `nsparam2' > 1 {
 		forvalues i= 1/`nsparam2' {
-			local cval = e(sparam2_vals)[`i', 1]
+			local cval = sparam2_vals[`i', 1]
 			local line_num = `i' * 2
 			local leg_lab `"`leg_lab' label(`line_num' "`cval'") "'
 			local leg_ord `"`leg_ord' `line_num'"'
@@ -219,6 +248,16 @@ program _regsen_idset_plot
 	// 3. Main plot
 	// =========================================================================
 	
+	// sparam2
+	if `oster' {
+		local bmin_i 3
+		local bmax_i 4
+	}
+	else {
+		local bmin_i 4
+		local bmax_i 5
+	}
+
 	if "`e(sparam1_option)'" == "eq" {
 		local rmax = e(sparam2_vals)[1,1]
 		plot_oster , rmax(`rmax') bmin(`ymin') bmax(`ymax') plotspecs(`plotspecs')
@@ -226,7 +265,10 @@ program _regsen_idset_plot
 	else {
 		// save identified set values to active dataset
 		forvalues i= 1/`nsparam2' {
-			matrix `idset' = e(idset`i')
+			local st = (`i' - 1) * `nsparam1' + 1
+			local en = `i' * `nsparam1'
+			matrix `idset' = idset
+			matrix `idset' = (`idset'[`st'..`en',1], `idset'[`st'..`en',`bmin_i'..`bmax_i'])
 			matrix colnames `idset' = rx`i' lower`i' upper`i'
 			quietly svmat `idset', names(col)
 		}
@@ -242,9 +284,7 @@ program _regsen_idset_plot
 		}
 		
 		twoway `lineplots', `plotspecs' `leg' xlabel(`xlabel') xscale(`xscale') 
-		
-		
-		
+				
 	}
 		
 	quietly use `active_data', clear
@@ -345,8 +385,8 @@ real scalar ywidth_default(
 	real scalar beta_med,
 	real scalar p
 ){
-	idset = select(idset, idset[,3] :< .)
-	ywidth = quantiles(idset[,3], (p))
+	idset = select(idset, idset[,2] :< .)
+	ywidth = quantiles(idset[,2], (p))
 	ywidth = ((ywidth - beta_med) / sqrt(varx)) + .1 
 	return(ywidth)
 }

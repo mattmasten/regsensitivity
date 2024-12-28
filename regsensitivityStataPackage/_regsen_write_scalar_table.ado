@@ -1,4 +1,4 @@
-*! version 1.1.0  1aug2022
+*! version 1.2.0 Paul Diegert, Matt Masten, Alex Poirier 29sept24
 
 // PROGRAM: Write Scalar Table
 // DESCRIPTION: Writes a table of scalar data
